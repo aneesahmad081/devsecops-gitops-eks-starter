@@ -1,6 +1,8 @@
 
 pipeline {
-    agent any
+    agent {
+        label 'docker-ci'
+    }
 
     tools {
         nodejs 'NodeJS-24'
@@ -16,6 +18,13 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
 
+    environment {
+        IMAGE_NAME = 'devsecops-status-api'
+        DOCKER_HOST = 'tcp://docker:2376'
+        DOCKER_TLS_VERIFY = '1'
+        DOCKER_CERT_PATH = '/certs/client'
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
@@ -23,10 +32,11 @@ pipeline {
             }
         }
 
-        stage('Verify Node.js') {
+        stage('Verify Tools') {
             steps {
                 sh 'node --version'
                 sh 'npm --version'
+                sh 'docker version'
             }
         }
 
@@ -45,11 +55,37 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Image Build') {
+            steps {
+                sh '''
+                    docker build \
+                      -t "$IMAGE_NAME:ci-$BUILD_NUMBER" \
+                      ./app
+                '''
+            }
+        }
+
+        stage('Docker Image Verify') {
+            steps {
+                sh '''
+                    docker image inspect \
+                      "$IMAGE_NAME:ci-$BUILD_NUMBER"
+                '''
+
+                sh '''
+                    docker run --rm \
+                      --entrypoint node \
+                      "$IMAGE_NAME:ci-$BUILD_NUMBER" \
+                      --check src/index.js
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'SUCCESS: All Jenkins CI checks passed!'
+            echo 'SUCCESS: Tests and Docker image build passed!'
         }
 
         failure {
