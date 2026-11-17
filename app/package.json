@@ -1,0 +1,13 @@
+{
+  "name": "cloudops-status-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dependency-free Node.js API for the DevSecOps and GitOps EKS learning project",
+  "main": "src/index.js",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "check": "node --check src/index.js"
+  }
+}
