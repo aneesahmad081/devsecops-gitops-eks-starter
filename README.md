@@ -151,3 +151,7 @@ This project uses Jenkins Declarative Pipeline for:
 - CI build status verification
 
 All 5 automated tests passed successfully.
+### CI/CD Automation
+
+Jenkins automatically checks GitHub for new commits
+using SCM Polling and runs the CI pipeline.
