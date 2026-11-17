@@ -40,6 +40,38 @@ pipeline {
             }
         }
 
+
+stage('Container Smoke Test') {
+    steps {
+        sh '''
+            set -eu
+
+            CONTAINER="status-api-smoke-$BUILD_NUMBER"
+
+            docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+
+            trap 'docker rm -f "$CONTAINER" >/dev/null 2>&1 || true' EXIT
+
+            docker run -d \
+              --name "$CONTAINER" \
+              "$IMAGE_NAME:ci-$BUILD_NUMBER"
+
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+                if docker exec "$CONTAINER" node -e "require('node:http').get('http://127.0.0.1:3000/health/ready', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"; then
+                    echo "SMOKE TEST PASSED: HTTP 200"
+                    exit 0
+                fi
+                sleep 2
+            done
+
+            echo "SMOKE TEST FAILED"
+            docker logs "$CONTAINER" || true
+            exit 1
+        '''
+    }
+}
+
+
         stage('Code Validation') {
             steps {
                 dir('app') {
