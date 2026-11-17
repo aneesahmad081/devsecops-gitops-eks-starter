@@ -155,3 +155,23 @@ All 5 automated tests passed successfully.
 
 Jenkins automatically checks GitHub for new commits
 using SCM Polling and runs the CI pipeline.
+### Container Vulnerability Remediation with Trivy
+
+Performed vulnerability scanning and security hardening on the Node.js Docker image using Trivy.
+
+**Initial Security Scan (`ci-6`):**
+- HIGH: 6
+- CRITICAL: 0
+- Affected packages: `brace-expansion` and `undici`.
+
+**Remediation:**
+- Removed unnecessary npm, Yarn, and Corepack components from the runtime image.
+- Reduced the image's attack surface.
+- Rebuilt the Docker image through Jenkins CI.
+- Verified the updated container image using Trivy.
+
+**Final Security Scan (`ci-8`):**
+- HIGH: 0
+- CRITICAL: 0
+
+**Result:** All six previously identified HIGH-severity findings were eliminated from the runtime image.
