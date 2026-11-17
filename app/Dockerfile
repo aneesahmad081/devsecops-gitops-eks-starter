@@ -6,7 +6,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000
 
-
+# Remove unused package managers from runtime image
 RUN rm -rf \
       /usr/local/lib/node_modules/npm \
       /usr/local/lib/node_modules/corepack \
