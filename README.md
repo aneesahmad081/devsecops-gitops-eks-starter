@@ -139,3 +139,15 @@ AWS EKS cluster, EC2 worker nodes, NAT gateways, Load Balancers and public IPv4 
 
 - `docs/ROADMAP-ROMAN-URDU.md`
 - `docs/INTERVIEW-ROMAN-URDU.md`
+
+## Jenkins Continuous Integration
+
+This project uses Jenkins Declarative Pipeline for:
+
+- GitHub repository checkout
+- Node.js environment verification
+- Source code syntax validation
+- Automated unit testing
+- CI build status verification
+
+All 5 automated tests passed successfully.
