@@ -57,17 +57,25 @@ pipeline {
         }
 
         
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
+        
+stage('SonarQube Analysis & Quality Gate') {
+    steps {
+        timeout(time: 10, unit: 'MINUTES') {
+            script {
+                def scannerHome = tool 'SonarScanner'
 
-                    withSonarQubeEnv('SonarQube-Local') {
-                        sh "${scannerHome}/bin/sonar-scanner"
-                    }
+                withSonarQubeEnv('SonarQube-Local') {
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.qualitygate.wait=true \
+                        -Dsonar.qualitygate.timeout=300
+                    """
                 }
             }
         }
+    }
+}
+
 
 
 
