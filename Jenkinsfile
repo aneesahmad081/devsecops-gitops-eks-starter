@@ -23,6 +23,9 @@ pipeline {
         DOCKER_HOST = 'tcp://docker:2376'
         DOCKER_TLS_VERIFY = '1'
         DOCKER_CERT_PATH = '/certs/client'
+        AWS_REGION = 'us-east-1'
+        ECR_REPOSITORY = 'devsecops-status-api'
+
     }
 
     stages {
@@ -155,6 +158,47 @@ stage('SonarQube Analysis & Quality Gate') {
                 '''
             }
         }
+
+stage('Push Docker Image to Amazon ECR') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-ecr-push'
+        ]]) {
+            sh '''
+                set -eu
+                set +x
+
+                echo "Starting secure Amazon ECR image publishing..."
+
+                AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+
+                ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:ci-${BUILD_NUMBER}"
+
+                export DOCKER_CONFIG="$(mktemp -d)"
+                trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+
+                echo "Authenticating to Amazon ECR..."
+
+                aws ecr get-login-password --region "$AWS_REGION" |
+                    docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+                echo "Tagging verified Docker image..."
+
+                docker tag "$IMAGE_NAME:ci-$BUILD_NUMBER" "$ECR_IMAGE"
+
+                echo "Publishing verified image to Amazon ECR..."
+
+                docker push "$ECR_IMAGE"
+
+                echo "ECR PUSH SUCCESS: ${ECR_REPOSITORY}:ci-${BUILD_NUMBER}"
+            '''
+        }
+    }
+}
+
     }
 
     post {
