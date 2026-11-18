@@ -109,15 +109,38 @@ pipeline {
                 '''
             }
         }
+
+        stage('Trivy Security Scan') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "Starting automated Trivy security scan..."
+
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                      -v trivy_ci_cache:/root/.cache/ \
+                      ghcr.io/aquasecurity/trivy:0.76.2 image \
+                      --image-src docker \
+                      --scanners vuln \
+                      --severity HIGH,CRITICAL \
+                      --table-mode summary \
+                      --exit-code 1 \
+                      "$IMAGE_NAME:ci-$BUILD_NUMBER"
+
+                    echo "SECURITY GATE PASSED: No HIGH or CRITICAL vulnerabilities detected."
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'SUCCESS: Tests, Docker build and smoke test passed!'
+            echo 'SUCCESS: Tests, Docker build, smoke test and Trivy security scan passed!'
         }
 
         failure {
-            echo 'FAILED: Check the Jenkins console output.'
+            echo 'FAILED: Check Jenkins console output for pipeline or security errors.'
         }
     }
 }
