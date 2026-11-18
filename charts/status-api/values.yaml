@@ -1,0 +1,20 @@
+
+replicaCount: 2
+
+image:
+  repository: devsecops-status-api
+  tag: "helm-0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 150m
+    memory: 128Mi
