@@ -1,0 +1,8 @@
+
+# AWS EKS GitOps environment
+replicaCount: 2
+
+image:
+  repository: 872857212478.dkr.ecr.us-east-1.amazonaws.com/devsecops-status-api
+  tag: "ci-18"
+  pullPolicy: IfNotPresent

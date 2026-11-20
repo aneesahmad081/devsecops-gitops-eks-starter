@@ -1,0 +1,32 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: status-api-helm
+  namespace: argocd
+
+spec:
+  project: default
+
+  info:
+    - name: Description
+      value: "GitOps-managed Node.js Status API deployed on Amazon EKS using Helm and Amazon ECR."
+
+  source:
+    repoURL: https://github.com/aneesahmad081/devsecops-gitops-eks-starter.git
+    targetRevision: main
+    path: charts/status-api
+
+    helm:
+      releaseName: status-api-helm
+      valueFiles:
+        - values-eks.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: devsecops-demo
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
