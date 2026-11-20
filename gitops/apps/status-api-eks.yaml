@@ -15,7 +15,7 @@ spec:
 
   source:
     repoURL: https://github.com/aneesahmad081/devsecops-gitops-eks-starter.git
-    targetRevision: main
+    targetRevision: gitops
     path: charts/status-api
 
     helm:
