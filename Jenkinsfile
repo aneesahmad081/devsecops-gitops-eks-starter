@@ -197,6 +197,93 @@ stage('Push Docker Image to Amazon ECR') {
             '''
         }
     }
+
+        stage('Promote Image to GitOps') {
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'github-gitops-token',
+                        variable: 'GITHUB_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        set +x
+                        umask 077
+
+                        echo "Starting GitOps image promotion..."
+
+                        IMAGE_TAG="ci-${BUILD_NUMBER}"
+                        GITOPS_REPO="https://github.com/aneesahmad081/devsecops-gitops-eks-starter.git"
+
+                        TEMP_DIR="$(mktemp -d)"
+                        trap 'rm -rf "$TEMP_DIR"' EXIT
+
+                        cat > "$TEMP_DIR/askpass.sh" <<'ASKPASS'
+#!/bin/sh
+case "$1" in
+    *Username*) printf '%s\\n' "x-access-token" ;;
+    *Password*) printf '%s\\n' "$GITHUB_TOKEN" ;;
+    *) exit 1 ;;
+esac
+ASKPASS
+
+                        chmod 700 "$TEMP_DIR/askpass.sh"
+                        export GIT_ASKPASS="$TEMP_DIR/askpass.sh"
+                        export GIT_TERMINAL_PROMPT=0
+
+                        echo "Cloning GitOps branch..."
+
+                        git -c credential.helper= clone \
+                            --quiet \
+                            --depth 1 \
+                            --branch gitops \
+                            "$GITOPS_REPO" \
+                            "$TEMP_DIR/repo"
+
+                        cd "$TEMP_DIR/repo"
+
+                        VALUES_FILE="charts/status-api/values-eks.yaml"
+
+                        test -f "$VALUES_FILE"
+
+                        grep -Eq '^  tag: ' "$VALUES_FILE" || {
+                            echo "ERROR: Image tag field not found."
+                            exit 1
+                        }
+
+                        sed -i -E \
+                            "s|^  tag: .*|  tag: \\"$IMAGE_TAG\\"|" \
+                            "$VALUES_FILE"
+
+                        grep -F "tag: \\"$IMAGE_TAG\\"" \
+                            "$VALUES_FILE" >/dev/null
+
+                        git diff --check
+
+                        if git diff --quiet -- "$VALUES_FILE"; then
+                            echo "Image already promoted: $IMAGE_TAG"
+                            exit 0
+                        fi
+
+                        git config user.name "Jenkins GitOps Bot"
+                        git config user.email "jenkins-gitops@users.noreply.github.com"
+
+                        git add "$VALUES_FILE"
+
+                        git commit -m \
+                            "chore(gitops): promote status-api to $IMAGE_TAG"
+
+                        echo "Pushing updated image tag..."
+
+                        git -c credential.helper= push origin HEAD:gitops
+
+                        echo "GITOPS PROMOTION SUCCESS: $IMAGE_TAG"
+                    '''
+                }
+            }
+        }
+
 }
 
     }
