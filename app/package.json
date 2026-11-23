@@ -4,10 +4,15 @@
   "private": true,
   "description": "Dependency-free Node.js API for the DevSecOps and GitOps EKS learning project",
   "main": "src/index.js",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test",
     "check": "node --check src/index.js"
+  },
+  "dependencies": {
+    "prom-client": "^15.1.3"
   }
 }
