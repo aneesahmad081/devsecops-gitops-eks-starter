@@ -16,3 +16,13 @@ crash.log
 kubeconfig
 *.pem
 *.key
+# Terraform local files and sensitive state
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/terraform.tfvars
+**/*.auto.tfvars
+**/crash.log
+monitoring/helm-cache/
+monitoring/rendered/
