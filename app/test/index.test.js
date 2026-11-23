@@ -61,3 +61,13 @@ test('unsupported HTTP methods return 405', async () => {
     assert.equal(response.status, 405);
   });
 });
+test('metrics endpoint returns Prometheus metrics', async () => {
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/metrics`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /text\/plain/);
+    assert.match(body, /process_cpu/);
+  });
+});
