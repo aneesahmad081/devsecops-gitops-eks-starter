@@ -1,28 +1,51 @@
+
 name: Starter CI - Test and Build
+
 on:
   pull_request:
   push:
     branches: [main]
+
 permissions:
   contents: read
+
 jobs:
   test:
+    name: Node.js Tests
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Validate syntax
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate Syntax
         run: npm run check
-        working-directory: app
-      - name: Run tests
+
+      - name: Run Unit Tests
         run: npm test
-        working-directory: app
+
   docker-build:
+    name: Docker Build
     runs-on: ubuntu-latest
     needs: test
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Build local CI image (no publishing)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
         run: docker build -t devsecops-status-api:${{ github.sha }} ./app
