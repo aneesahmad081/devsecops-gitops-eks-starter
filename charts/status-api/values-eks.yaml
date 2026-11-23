@@ -4,5 +4,5 @@ replicaCount: 2
 
 image:
   repository: 872857212478.dkr.ecr.us-east-1.amazonaws.com/devsecops-status-api
-  tag: 'ci-35'
+  tag: 'ci-36'
   pullPolicy: IfNotPresent
