@@ -43,6 +43,13 @@ pipeline {
                 sh 'docker version'
             }
         }
+        stage('Install Dependencies') {
+    steps {
+        dir('app') {
+            sh 'npm ci'
+        }
+    }
+}
 
         stage('Code Validation') {
             steps {
